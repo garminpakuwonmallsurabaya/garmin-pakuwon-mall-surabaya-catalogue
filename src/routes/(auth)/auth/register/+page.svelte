@@ -17,7 +17,7 @@
 </svelte:head>
 
 <main class="min-h-screen bg-[#f5f2ed] px-4 py-6 text-[#202326] sm:px-8 lg:px-12 lg:py-10">
-	<div class="mx-auto grid w-full max-w-6xl gap-8 lg:grid-cols-[minmax(0,1fr)_250px] lg:items-start xl:gap-12">
+	<div class="mx-auto w-full max-w-5xl">
 		<section class="overflow-hidden rounded-2xl border border-black/10 bg-white shadow-[0_18px_55px_rgba(48,38,28,0.10)]">
 			<div class="grid min-h-155 md:grid-cols-2">
 				<!-- Photo + brand panel -->

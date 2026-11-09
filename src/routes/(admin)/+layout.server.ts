@@ -27,7 +27,8 @@ export const load: LayoutServerLoad = async ({
 	}
 
 	// Sudah login, tetapi bukan admin
-	if (profile.role !== 'admin') {
+	const allowedRoles = ['admin', 'superuser'];
+	if (!allowedRoles.includes(profile.role)) {
 		redirect(303, '/');
 	}
 

@@ -1,32 +1,48 @@
+
 <script lang="ts">
-  import { page } from '$app/state';
-  import { goto } from '$app/navigation';
-  import { supabase } from '#lib/supabase/client.ts';
+    import { page } from '$app/state';
+    import { goto } from '$app/navigation';
+    import { supabase } from '#lib/supabase/client.ts';
 
-  let mobileMenuOpen = $state(false);
+    let mobileMenuOpen = $state(false);
 
-  const navItems = [
-    { label: 'Products', href: '/admin/products', icon: 'box' },
-    { label: 'Categories', href: '/admin/categories', icon: 'layers' }
-  ];
+    let { data, children }: LayoutProps = $props();
 
-  function isActive(href: string) {
-    if (href === '/admin') return page.url.pathname === href;
-    return page.url.pathname.startsWith(href);
-  }
+    const navItems = $derived([
+        {
+            label: 'Products',
+            href: '/admin/products',
+            icon: 'box'
+        },
+        {
+            label: 'Categories',
+            href: '/admin/categories',
+            icon: 'layers'
+        },
+        ...(data.profile.role === 'superuser'
+            ? [{
+                label: 'Users',
+                href: '/admin/users',
+                icon: 'users'
+            }]
+            : [])
+    ]);
 
-  let { data, children }: LayoutProps = $props();
+    function isActive(href: string) {
+        return page.url.pathname === href ||
+            page.url.pathname.startsWith(`${href}/`);
+    }
 
-  async function handleLogout() {
-		const { error } = await supabase.auth.signOut();
+    async function handleLogout() {
+        const { error } = await supabase.auth.signOut();
 
-		if (error) {
-			console.error('Logout failed:', error.message);
-			return;
-		}
+        if (error) {
+            console.error('Logout failed:', error.message);
+            return;
+        }
 
-		await goto('/auth/login');
-	}
+        await goto('/auth/login');
+    }
 </script>
 
 <svelte:head>
@@ -47,21 +63,74 @@
 
     <div class="px-4 pt-7">
       <p class="mb-3 px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#9b9993]">Workspace</p>
-      <nav class="space-y-1">
-        {#each navItems as item}
-          <a href={item.href} onclick={() => (mobileMenuOpen = false)} class={`group flex items-center gap-3 rounded-xl px-3.5 py-3 text-[13px] font-medium transition ${isActive(item.href) ? 'bg-[#242422] text-white shadow-sm' : 'text-[#686761] hover:bg-[#f5f4f1] hover:text-[#20201e]'}`}>
-            {#if item.icon === 'grid'}
-              <svg viewBox="0 0 24 24" class="h-[18px] w-[18px]" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg>
-            {:else if item.icon === 'box'}
-              <svg viewBox="0 0 24 24" class="h-[18px] w-[18px]" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m12 3 8.5 4.5v9L12 21l-8.5-4.5v-9z"/><path d="m3.8 7.7 8.2 4.5 8.2-4.5M12 12.2V21M8 5.1l8.5 4.6"/></svg>
-            {:else}
-              <svg viewBox="0 0 24 24" class="h-[18px] w-[18px]" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3.5" y="4" width="7" height="7" rx="1.5"/><rect x="13.5" y="4" width="7" height="7" rx="1.5"/><rect x="3.5" y="14" width="7" height="6" rx="1.5"/><rect x="13.5" y="14" width="7" height="6" rx="1.5"/></svg>
+      
+<nav class="space-y-1">
+    {#each navItems as item (item.href)}
+        <a
+            href={item.href}
+            onclick={() => (mobileMenuOpen = false)}
+            class={`group flex items-center gap-3 rounded-xl px-3.5 py-3 text-[13px] font-medium transition ${
+                isActive(item.href)
+                    ? 'bg-[#242422] text-white shadow-sm'
+                    : 'text-[#686761] hover:bg-[#f5f4f1] hover:text-[#20201e]'
+            }`}
+        >
+            {#if item.icon === 'box'}
+                <!-- Products -->
+                <svg
+                    viewBox="0 0 24 24"
+                    class="h-[18px] w-[18px]"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.7"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                >
+                    <path d="m12 3 8.5 4.5v9L12 21l-8.5-4.5v-9z"/>
+                    <path d="m3.8 7.7 8.2 4.5 8.2-4.5M12 12.2V21"/>
+                </svg>
+            {:else if item.icon === 'layers'}
+                <!-- Categories -->
+                <svg
+                    viewBox="0 0 24 24"
+                    class="h-[18px] w-[18px]"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.7"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                >
+                    <path d="m12 3 9 5-9 5-9-5z"/>
+                    <path d="m3 12 9 5 9-5"/>
+                    <path d="m3 16 9 5 9-5"/>
+                </svg>
+            {:else if item.icon === 'users'}
+                <!-- Users -->
+                <svg
+                    viewBox="0 0 24 24"
+                    class="h-[18px] w-[18px]"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.7"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                >
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="10" cy="7" r="4"/>
+                    <path d="M20 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
             {/if}
+
             {item.label}
-            {#if isActive(item.href)}<span class="ml-auto h-1.5 w-1.5 rounded-full bg-[#d7b594]"></span>{/if}
-          </a>
-        {/each}
-      </nav>
+
+            {#if isActive(item.href)}
+                <span class="ml-auto h-1.5 w-1.5 rounded-full bg-[#d7b594]"></span>
+            {/if}
+        </a>
+    {/each}
+</nav>
+
     </div>
 
     <div class="mt-auto border-t border-black/[0.06] p-4">
