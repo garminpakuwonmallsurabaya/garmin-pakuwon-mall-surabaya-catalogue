@@ -135,7 +135,7 @@ export const actions: Actions = {
         console.log(`profile error: ${profileError}`);
         console.log(`user role: ${profile?.role}`);
 
-		if (profileError || profile?.role !== 'admin') {
+		if (profileError || !['admin', 'superuser'].includes(profile?.role ?? '')) {
 			return fail(403, { message: 'Admin access required.' });
 		}
 

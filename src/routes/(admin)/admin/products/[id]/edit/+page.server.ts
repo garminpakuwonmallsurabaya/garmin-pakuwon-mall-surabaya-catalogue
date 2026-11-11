@@ -185,7 +185,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		.eq('id', user.id)
 		.single();
 
-	if (profileError || profile?.role !== 'admin') {
+	if (profileError || !['admin', 'superuser'].includes(profile?.role ?? '')) {
 		error(403, 'Admin access required.');
 	}
 
@@ -303,7 +303,7 @@ export const actions: Actions = {
 			.eq('id', user.id)
 			.single();
 
-		if (profileError || profile?.role !== 'admin') {
+		if (profileError ||!['admin', 'superuser'].includes(profile?.role ?? '')) {
 			return fail(403, { message: 'Admin access required.' });
 		}
 

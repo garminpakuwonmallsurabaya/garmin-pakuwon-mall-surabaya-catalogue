@@ -133,7 +133,7 @@ export const actions: Actions = {
     	}
 
     	// Pastikan pengguna adalah admin.
-    	if (locals.profile?.role !== 'admin') {
+    	if (!['admin', 'superuser'].includes(locals.profile?.role ?? '')) {
         	return fail(403, {
             	message: 'Kamu tidak memiliki akses untuk menghapus kategori.'
         	});
