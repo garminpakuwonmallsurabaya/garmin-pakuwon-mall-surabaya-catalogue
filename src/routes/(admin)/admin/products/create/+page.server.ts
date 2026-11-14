@@ -15,11 +15,12 @@ type ImageInput = {
 };
 
 type SubVariantInput = {
-	name: string;
-	price: number;
-	is_active: boolean;
-	sort_order: number;
-	images: ImageInput[];
+    name: string;
+    price: number;
+    original_price: number | null;
+    is_active: boolean;
+    sort_order: number;
+    images: ImageInput[];
 };
 
 type VariantGroupInput = {
@@ -69,34 +70,42 @@ function isValidPayload(value: unknown): value is ProductPayload {
 		}
 
 		for (const sub of group.subVariants) {
-			totalSubVariants++;
+    totalSubVariants++;
 
-			if (
-				!sub ||
-				typeof sub !== 'object' ||
-				typeof sub.name !== 'string' ||
-				!sub.name.trim() ||
-				sub.name.length > 100 ||
-				typeof sub.price !== 'number' ||
-				!Number.isFinite(sub.price) ||
-				sub.price < 0 ||
-				typeof sub.is_active !== 'boolean' ||
-				!Array.isArray(sub.images) ||
-				sub.images.length > MAX_IMAGES_PER_VARIANT
-			) {
-				return false;
-			}
+    if (
+        !sub ||
+        typeof sub !== 'object' ||
+        typeof sub.name !== 'string' ||
+        !sub.name.trim() ||
+        sub.name.length > 100 ||
+        typeof sub.price !== 'number' ||
+        !Number.isFinite(sub.price) ||
+        sub.price < 0 ||
+        (
+            sub.original_price !== null &&
+            (
+                typeof sub.original_price !== 'number' ||
+                !Number.isFinite(sub.original_price) ||
+                sub.original_price <= sub.price
+            )
+        ) ||
+        typeof sub.is_active !== 'boolean' ||
+        !Array.isArray(sub.images) ||
+        sub.images.length > MAX_IMAGES_PER_VARIANT
+    ) {
+        return false;
+    }
 
-			for (const image of sub.images) {
-				if (
-					!Number.isInteger(image.index) ||
-					image.index < 0 ||
-					!Number.isInteger(image.sort_order) ||
-					image.sort_order < 0
-				) {
-					return false;
-				}
-			}
+    for (const image of sub.images) {
+        if (
+            !Number.isInteger(image.index) ||
+            image.index < 0 ||
+            !Number.isInteger(image.sort_order) ||
+            image.sort_order < 0
+        ) {
+            return false;
+        }
+    }
 		}
 	}
 
@@ -302,7 +311,7 @@ export const actions: Actions = {
 
 			// 3. Create variant groups.
 			for (const [groupIndex, group] of payload.variants.entries()) {
-                
+
 				const { data: groupRow, error: groupError } =
 					await locals.supabase
 						.from('variant_groups')
@@ -318,19 +327,20 @@ export const actions: Actions = {
 
 				// 4. Create sub-variants.
 				for (const [subIndex, sub] of group.subVariants.entries()) {
-                    
-					const { data: variantRow, error: variantError } =
-						await locals.supabase
-							.from('product_variants')
-							.insert({
-								group_id: groupRow.id,
-								name: sub.name.trim(),
-								price: sub.price,
-								sort_order: sub.sort_order ?? subIndex,
-								is_active: sub.is_active
-							})
-							.select('id')
-							.single();
+
+				const { data: variantRow, error: variantError } =
+          await locals.supabase
+            .from('product_variants')
+            .insert({
+              group_id: groupRow.id,
+              name: sub.name.trim(),
+              price: sub.price,
+              original_price: sub.original_price,
+              sort_order: sub.sort_order ?? subIndex,
+              is_active: sub.is_active
+            })
+            .select('id')
+            .single();
 
 					if (variantError) throw variantError;
 

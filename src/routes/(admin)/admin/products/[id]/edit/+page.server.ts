@@ -21,12 +21,13 @@ type NewImageInput = {
 type ImageInput = ExistingImageInput | NewImageInput;
 
 type SubVariantInput = {
-	id?: string;
-	name: string;
-	price: number;
-	is_active: boolean;
-	sort_order: number;
-	images: ImageInput[];
+    id?: string;
+    name: string;
+    price: number;
+    original_price: number | null;
+    is_active: boolean;
+    sort_order: number;
+    images: ImageInput[];
 };
 
 type VariantGroupInput = {
@@ -113,20 +114,28 @@ function isValidPayload(value: unknown): value is ProductPayload {
 			totalSubVariants++;
 
 			if (
-				!isRecord(sub) ||
-				(sub.id !== undefined && !isNonEmptyString(sub.id)) ||
-				!isNonEmptyString(sub.name) ||
-				sub.name.length > 100 ||
-				typeof sub.price !== 'number' ||
-				!Number.isFinite(sub.price) ||
-				sub.price < 0 ||
-				typeof sub.is_active !== 'boolean' ||
-				!Number.isInteger(sub.sort_order) ||
-				!Array.isArray(sub.images) ||
-				sub.images.length > MAX_IMAGES_PER_VARIANT
-			) {
-				return false;
-			}
+        !isRecord(sub) ||
+        (sub.id !== undefined && !isNonEmptyString(sub.id)) ||
+        !isNonEmptyString(sub.name) ||
+        sub.name.length > 100 ||
+        typeof sub.price !== 'number' ||
+        !Number.isFinite(sub.price) ||
+        sub.price < 0 ||
+        (
+          sub.original_price !== null &&
+          (
+              typeof sub.original_price !== 'number' ||
+              !Number.isFinite(sub.original_price) ||
+              sub.original_price <= sub.price
+          )
+    ) ||
+    typeof sub.is_active !== 'boolean' ||
+    !Number.isInteger(sub.sort_order) ||
+    !Array.isArray(sub.images) ||
+    sub.images.length > MAX_IMAGES_PER_VARIANT
+		) {
+    return false;
+		}
 
 			if (typeof sub.id === 'string') {
 				if (submittedSubVariantIds.has(sub.id)) return false;
@@ -204,6 +213,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 					id,
 					name,
 					price,
+					original_price,
 					sort_order,
 					is_active
 				)
@@ -262,7 +272,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				.map((variant) => ({
 					id: variant.id,
 					name: variant.name,
-					price: variant.price,
+          price: variant.price,
+					original_price: variant.original_price,
 					is_active: variant.is_active,
 					images: images
 						.filter((image) => image.variant_id === variant.id)
@@ -611,7 +622,8 @@ export const actions: Actions = {
 							.from('product_variants')
 							.update({
 								name: sub.name.trim(),
-								price: sub.price,
+                price: sub.price,
+								original_price: sub.original_price,
 								is_active: sub.is_active,
 								sort_order: sub.sort_order ?? subIndex
 							})
@@ -626,7 +638,8 @@ export const actions: Actions = {
 								.insert({
 									group_id: groupId,
 									name: sub.name.trim(),
-									price: sub.price,
+                  price: sub.price,
+									original_price: sub.original_price,
 									is_active: sub.is_active,
 									sort_order: sub.sort_order ?? subIndex
 								})

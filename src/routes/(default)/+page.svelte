@@ -89,8 +89,8 @@
 					value={data.filters.sort}
 				/>
 
-				<button 
-					type="submit" 
+				<button
+					type="submit"
 					aria-label="Search"
 					class="flex items-center justify-center"
 				>
@@ -264,26 +264,36 @@
 							</h3>
 
 							<div class="product-bottom">
-								<span class="price">
-									{formatPrice(product.price)}
-								</span>
+    <div class="price-wrapper">
+        {#if product.originalPrice !== null &&
+            product.price !== null &&
+            product.originalPrice > product.price}
+            <span class="original-price">
+                {formatPrice(product.originalPrice)}
+            </span>
+        {/if}
 
-								<a
-									href="/products/{product.slug}"
-									class="view-button"
-									aria-label="View {product.name}"
-								>
-									<svg
-										width="18"
-										height="18"
-										viewBox="0 0 24 24"
-										fill="none"
-										stroke="currentColor"
-										stroke-width="1.7"
-									>
-										<path d="M5 12h14M12 5l7 7-7 7" />
-									</svg>
-								</a>
+        <span class="price">
+            {formatPrice(product.price)}
+        </span>
+    </div>
+
+    <a
+        href="/products/{product.slug}"
+        class="view-button"
+        aria-label="View {product.name}"
+    >
+        <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.7"
+        >
+            <path d="M5 12h14M12 5l7 7-7 7" />
+        </svg>
+    </a>
 							</div>
 						</div>
 					</article>
@@ -696,6 +706,20 @@
 		justify-content: space-between;
 		gap: 10px;
 		margin-top: 18px;
+	}
+
+	.price-wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        min-width: 0;
+	}
+
+	.original-price {
+        color: #999;
+        font-size: 11px;
+        font-weight: 400;
+        text-decoration: line-through;
 	}
 
 	.price {

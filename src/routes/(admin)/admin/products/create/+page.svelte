@@ -14,11 +14,12 @@
 	};
 
 	type SubVariant = {
-		id: number;
-		name: string;
-		price: number | string;
-		is_active: boolean;
-		images: SubVariantImage[];
+      id: number;
+      name: string;
+      price: number | string;
+      original_price: number | string | null;
+      is_active: boolean;
+      images: SubVariantImage[];
 	};
 
 	type Variant = {
@@ -40,7 +41,7 @@
 	let nextVariantId = 3;
 	let nextSubVariantId = 5;
 
-    const formatRupiah = (value: number | string | undefined) => {
+    const formatRupiah = (value: number | string | null | undefined) => {
         if (value === '' || value === undefined || value === null) {
             return '';
         }
@@ -69,6 +70,7 @@
 					id: nextSubVariantId++,
 					name: '',
 					price: '',
+					original_price: '',
 					is_active: true,
 					images: []
 				}
@@ -99,6 +101,7 @@
 			id: nextSubVariantId++,
 			name: '',
 			price: '',
+			original_price: '',
 			is_active: true,
 			images: []
 		});
@@ -325,6 +328,25 @@
 	                                );
                                 }
 
+									const originalPrice =
+										subVariant.original_price === '' ||
+										subVariant.original_price === null ||
+										subVariant.original_price === undefined
+											? null
+											: Number(subVariant.original_price);
+
+                                if (
+                                    originalPrice !== null &&
+                                    (
+                                        !Number.isFinite(originalPrice) ||
+                                        originalPrice <= Number(subVariant.price)
+                                    )
+                                ) {
+                                    throw new Error(
+                                        `Original price must be higher than selling price for ${subVariant.name}.`
+                                    );
+                                }
+
 								if (subVariant.images.length > MAX_IMAGES) {
 									throw new Error(
 										`${subVariant.name} cannot have more than 2 images.`
@@ -355,8 +377,9 @@
 								);
 
 								return {
-									name: subVariant.name.trim(),
+								    name: subVariant.name.trim(),
 									price: Number(subVariant.price),
+									original_price: originalPrice,
 									is_active: subVariant.is_active,
 									sort_order: subIndex,
 									images
@@ -783,30 +806,95 @@
 													/>
 												</div>
 
-												<!-- Price -->
-                                                <div>
-                                                    <label
-                                                        for={`sub-price-${subVariant.id}`}
-                                                        class="mb-2 block text-sm font-medium text-neutral-700"
-                                                    >
-                                                        Price (Rp) <span class="text-red-500">*</span>
-                                                    </label>
-                                                    <input
-                                                        id={`sub-price-${subVariant.id}`}
-                                                        type="number"
-                                                        min="0"
-                                                        step="1"
-                                                        bind:value={subVariant.price}
-                                                        placeholder="Contoh: 12999000"
-                                                        required
-                                                        class="w-full rounded-lg border border-neutral-200 px-3 py-2.5 text-sm outline-none focus:border-[#C58B62] focus:ring-2 focus:ring-[#C58B62]/15"
-                                                    />
-                                                    {#if subVariant.price !== '' && Number.isFinite(Number(subVariant.price)) && Number(subVariant.price) >= 0}
-                                                        <p class="mt-2 text-xs text-neutral-500">
-                                                        {formatRupiah(subVariant.price)}
-                                                        </p>
-                                                    {/if}
-                                                </div>
+												<!-- Selling Price -->
+												<div>
+												    <label
+														for={`sub-price-${subVariant.id}`}
+														class="mb-2 block text-sm font-medium text-neutral-700"
+													>
+													    Selling Price (Rp) <span class="text-red-500">*</span>
+													</label>
+
+													<input
+													    id={`sub-price-${subVariant.id}`}
+														type="number"
+														min="0"
+														step="1"
+														bind:value={subVariant.price}
+														placeholder="Contoh: 12999000"
+														required
+														class="w-full rounded-lg border border-neutral-200 px-3 py-2.5 text-sm outline-none focus:border-[#C58B62] focus:ring-2 focus:ring-[#C58B62]/15"
+													/>
+
+													{#if subVariant.price !== '' && Number.isFinite(Number(subVariant.price)) && Number(subVariant.price) >= 0}
+													    <p class="mt-2 text-xs text-neutral-500">
+															{formatRupiah(subVariant.price)}
+																	</p>
+													{/if}
+												</div>
+
+												<!-- Original Price -->
+												<div>
+												    <label
+														for={`sub-original-price-${subVariant.id}`}
+														class="mb-2 block text-sm font-medium text-neutral-700"
+													>
+												        Original Price (Rp)
+														<span class="text-xs font-normal text-neutral-400">
+                                                        Optional
+														</span>
+													</label>
+
+													<input
+													    id={`sub-original-price-${subVariant.id}`}
+													    type="number"
+													    min="0"
+													    step="1"
+													    bind:value={subVariant.original_price}
+													    placeholder="Contoh: 15999000"
+													    class="w-full rounded-lg border border-neutral-200 px-3 py-2.5 text-sm outline-none focus:border-[#C58B62] focus:ring-2 focus:ring-[#C58B62]/15"
+													/>
+
+													    {#if subVariant.original_price !== '' && Number.isFinite(Number(subVariant.original_price)) && Number(subVariant.original_price) >= 0}
+															<p class="mt-2 text-xs text-neutral-500">
+															    {formatRupiah(subVariant.original_price)}
+															</p>
+														{/if}
+												</div>
+
+												<!-- Discount Preview -->
+												{#if
+									subVariant.price !== '' &&
+									subVariant.price !== null &&
+									subVariant.price !== undefined &&
+									subVariant.original_price !== '' &&
+									subVariant.original_price !== null &&
+									Number.isFinite(Number(subVariant.price)) &&
+									Number.isFinite(Number(subVariant.original_price)) &&
+									Number(subVariant.price) >= 0 &&
+									Number(subVariant.original_price) > Number(subVariant.price)
+								}
+												    <div class="sm:col-span-2 rounded-lg bg-green-50 px-3 py-2.5">
+														<div class="flex items-center justify-between gap-2">
+														    <span class="text-sm font-medium text-green-700">
+															Discount
+															</span>
+
+															<span class="rounded-full bg-green-100 px-2.5 py-1 text-xs font-semibold text-green-700">
+                                                                {Math.round(
+                                                                ((Number(subVariant.original_price) - Number(subVariant.price)) /
+                                                                Number(subVariant.original_price)) * 100
+                                                                )}% OFF
+															</span>
+														</div>
+
+														<p class="mt-1 text-xs text-green-700">
+														    Save {formatRupiah(
+                                                            Number(subVariant.original_price) - Number(subVariant.price)
+															)}
+														</p>
+													</div>
+												{/if}
 
 												<!-- Active Status -->
 												<div class="sm:col-span-2">

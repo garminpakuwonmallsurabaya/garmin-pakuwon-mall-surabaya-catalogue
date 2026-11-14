@@ -19,6 +19,7 @@ export const load: PageServerLoad = async ({ params, locals: { supabase } }) => 
 					id,
 					name,
 					price,
+					original_price,
 					is_active,
 					sort_order,
 					variant_images (

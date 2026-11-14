@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { page } from '$app/state';
-
 	let { data } = $props();
 
 	// Ganti dengan nomor WhatsApp client.
@@ -54,7 +52,15 @@
 			`Produk: ${product.name}`,
 			`Variant: ${selectedGroup?.name ?? '-'}`,
 			`Sub Variant: ${selectedVariant?.name ?? '-'}`,
-			`Harga: ${selectedVariant ? formatPrice(selectedVariant.price) : '-'}`,
+			...(selectedVariant
+				? selectedVariant.original_price !== null &&
+				  selectedVariant.original_price > selectedVariant.price
+					? [
+							`Harga normal: ${formatPrice(selectedVariant.original_price)}`,
+							`Harga diskon: ${formatPrice(selectedVariant.price)}`
+						  ]
+					: [`Harga: ${formatPrice(selectedVariant.price)}`]
+				: ['Harga: -']),
 			'',
 			'Apakah produk ini tersedia?'
 		].join('\n')
@@ -148,9 +154,16 @@
 				</p>
 
 				{#if selectedVariant}
-					<p class="product-price">
-						{formatPrice(selectedVariant.price)}
-					</p>
+					<div class="product-price-wrapper">
+						{#if selectedVariant.original_price !== null && selectedVariant.original_price > selectedVariant.price}
+							<p class="product-original-price">
+								{formatPrice(selectedVariant.original_price)}
+							</p>
+						{/if}
+						<p class="product-price">
+							{formatPrice(selectedVariant.price)}
+						</p>
+					</div>
 				{/if}
 			</div>
 
@@ -212,9 +225,16 @@
 											{variant.name}
 										</span>
 
-										<span class="subvariant-price">
-											{formatPrice(variant.price)}
-										</span>
+										<div class="subvariant-prices">
+											{#if variant.original_price !== null && variant.original_price > variant.price}
+												<span class="subvariant-original-price">
+													{formatPrice(variant.original_price)}
+												</span>
+											{/if}
+											<span class="subvariant-price">
+												{formatPrice(variant.price)}
+											</span>
+										</div>
 									</div>
 
 									{#if selectedVariantId === variant.id}
@@ -438,8 +458,24 @@
 		line-height: 1.5;
 	}
 
-	.product-price {
+	.product-price-wrapper {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 3px;
 		margin: 16px 0 20px;
+	}
+
+	.product-original-price {
+		margin: 0;
+		color: #999;
+		font-size: 15px;
+		font-weight: 400;
+		text-decoration: line-through;
+	}
+
+	.product-price {
+		margin: 0;
 		font-size: 27px;
 		font-weight: 700;
 		letter-spacing: -0.8px;
@@ -580,9 +616,25 @@
 		white-space: nowrap;
 	}
 
+	.subvariant-prices {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 2px;
+	}
+
+	.subvariant-original-price {
+		color: #999;
+		font-size: 10px;
+		font-weight: 400;
+		text-decoration: line-through;
+		white-space: nowrap;
+	}
+
 	.subvariant-price {
 		color: #666;
 		font-size: 11px;
+		font-weight: 700;
 		white-space: nowrap;
 	}
 

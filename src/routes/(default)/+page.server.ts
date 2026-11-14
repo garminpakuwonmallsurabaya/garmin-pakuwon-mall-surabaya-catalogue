@@ -57,6 +57,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 						id,
 						name,
 						price,
+						original_price,
 						is_active,
 						sort_order,
 						variant_images (
@@ -140,7 +141,8 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 				name: product.name,
 				slug: product.slug,
 				category: product.categories,
-				price: variants[0]?.price ?? null,
+        price: variants[0]?.price ?? null,
+				originalPrice: variants[0]?.original_price ?? null,
 				image: images[0] ?? null
 			};
 		}),
